@@ -52,7 +52,7 @@ void tlmmTerminateProgram(tlmmProgram* prog)
 }
 
 #ifdef TLMM_HAS_IO
-void tlmmLoadProgram(tlmmProgram* prog, const char* filename)
+void tlmmLoadProgramFile(tlmmProgram* prog, const char* filename)
 {
     FILE* fp = fopen(filename, "rb+");
     if(fp == 0)
@@ -74,12 +74,12 @@ void tlmmLoadProgram(tlmmProgram* prog, FILE* fp)
     delete [] data;
 }
 
-void tlmmSaveProgram(tlmmProgram* prog, const char* filename)
+void tlmmSaveProgramBinary(tlmmProgram* prog, const char* filename)
 {
 }
 #endif/*TLMM_HAS_IO*/
 
-void tlmmLoadProgram(tlmmProgram* prog, void* data, unsigned int size)
+void tlmmLoadProgramBinary(tlmmProgram* prog, void* data, unsigned int size)
 {
 }
 
@@ -264,3 +264,40 @@ tlmmInit()
 }
 };
 tlmmInit __init;
+
+namespace tlmm
+{
+    Program::Program()
+    {
+	m_prog  = tlmmInitProgram();
+    }
+
+    Program::~Program()
+    {
+	tlmmTerminateProgram(m_prog);
+    }
+
+    void Program::Load(std::string filename)
+    {
+#ifdef TLMM_HAS_IO
+	tlmmLoadProgramFile(m_prog, filename.c_str());
+#endif/*TLMM_HAS_IO*/
+    }
+
+    void Program::Save(std::string filename)
+    {
+#ifdef TLMM_HAS_IO
+	tlmmSaveProgramBinary(m_prog, filename.c_str());
+#endif/*TLMM_HAS_IO*/
+    }
+
+    void Program::Parse(std::string data)
+    {
+	tlmmParseProgram(m_prog, data.c_str());
+    }
+
+    float Program::GetValue(float ref)
+    {
+	tlmmGetValue(m_prog, ref);
+    }
+}

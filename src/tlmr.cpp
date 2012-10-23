@@ -3,9 +3,8 @@
 
 int main(int argc, char** argv)
 {
-    tlmmProgram* prog = tlmmInitProgram();
-    tlmmParseProgram(prog, "x+12");
-    printf("value: %f\n", tlmmGetValue(prog, 2));
-    tlmmTerminateProgram(prog);
+    tlmm::Program prog;
+    prog.Parse("x+2");
+    printf("value: %f\n", prog.GetValue(2));
     return 0;
 }
