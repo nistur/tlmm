@@ -21,14 +21,14 @@ void         tlmmTerminateProgram(tlmmProgram* prog);
 
 // load functions
 #ifdef TLMM_HAS_IO
-void         tlmmLoadProgramFile (tlmmProgram* prog, const char* filename);
-void         tlmmLoadProgram (tlmmProgram* prog, FILE* fp);
-void         tlmmSaveProgramBinary (tlmmProgram* prog, const char* filename);
+void         tlmmLoadProgramFile   (tlmmProgram* prog, const char* filename);
+void         tlmmLoadProgram       (tlmmProgram* prog, FILE* fp);
+void         tlmmSaveProgram       (tlmmProgram* prog, const char* filename);
 #endif/*TLMM_HAS_IO*/
-void         tlmmLoadProgramBinary (tlmmProgram* prog, void* data, unsigned int size);
-void         tlmmParseProgram(tlmmProgram* prog, const char* program);
+void         tlmmParseProgram      (tlmmProgram* prog, const char* program);
+bool         tlmmLoadProgramBinary (tlmmProgram* prog, void* data, int size);
 
-float        tlmmGetValue    (tlmmProgram* prog, float ref);
+float        tlmmGetValue          (tlmmProgram* prog, float ref);
 
 #ifdef __cplusplus
 }

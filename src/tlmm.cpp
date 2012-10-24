@@ -1,7 +1,7 @@
 #include "tlmm.h"
 
 #include <map>
-#include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <stack>
 
@@ -18,6 +18,15 @@ public:
 private:
     std::stack<float> m_Stack;
 };
+
+struct tlmmHeader
+{
+    char id[4];
+    char codeSize;
+    char dataSize;
+};
+
+const char* ID = "TLMM";
 
 typedef void(*instruction)(_stack*, float, _stack*);
 typedef unsigned char code;
@@ -68,19 +77,51 @@ void tlmmLoadProgram(tlmmProgram* prog, FILE* fp)
     rewind(fp);
     char* data = new char[size + 1];
     fread(data, 1, size, fp);
+    if(tlmmLoadProgramBinary(prog, data, size) == false)
+    {
 #ifdef TLMM_COMPILE
-    tlmmParseProgram(prog, data);
+	tlmmParseProgram(prog, data);
 #endif/*TLMM_COMPILE*/
+    }
     delete [] data;
 }
 
-void tlmmSaveProgramBinary(tlmmProgram* prog, const char* filename)
+void tlmmSaveProgram(tlmmProgram* prog, const char* filename)
 {
+    static tlmmHeader header;
+    memcpy(header.id, ID, 4);
+    header.codeSize = (char) prog->codeSize;
+    header.dataSize = (char) prog->dataSize;
+
+    FILE* fp = fopen(filename, "wb");
+    fwrite(&header, sizeof(header), 1, fp);
+    
+    fwrite(prog->codeSeg, sizeof(code), prog->codeSize, fp);
+    fwrite(prog->dataSeg, sizeof(float), prog->dataSize, fp);
+
+    fclose(fp);
 }
 #endif/*TLMM_HAS_IO*/
 
-void tlmmLoadProgramBinary(tlmmProgram* prog, void* data, unsigned int size)
+bool tlmmLoadProgramBinary(tlmmProgram* prog, void* data, int sz)
 {
+    char* _data = (char*)data;
+    tlmmHeader* header = (tlmmHeader*) _data;
+    if(memcmp(header->id, ID, 4) != 0)
+	return false;
+    prog->codeSize = header->codeSize;
+    prog->dataSize = header->dataSize;
+
+    _data += sizeof(tlmmHeader);
+
+    prog->codeSeg = new code[prog->codeSize];
+    prog->dataSeg = new float[prog->dataSize];
+    int size = prog->codeSize * sizeof(code);
+    memcpy(prog->codeSeg, _data, size);
+    _data += size;
+    size = prog->dataSize * sizeof(float);
+    memcpy(prog->dataSeg, _data, size);
+    return true;
 }
 
 #ifdef TLMM_COMPILE
@@ -126,6 +167,7 @@ void tlmmConvertRPN(std::vector<code>* symbols)
 		out.push_back(stack.back());
 		stack.pop_back();
 	    }
+	    stack.pop_back();
 	}
     }
 
@@ -243,6 +285,9 @@ INSTRUCTION(Del){ stack->push(stack->pop() - stack->pop()); }
 INSTRUCTION(Mul){ stack->push(stack->pop() * stack->pop()); }
 INSTRUCTION(Div){ stack->push(stack->pop() / stack->pop()); }
 INSTRUCTION(Pow){ stack->push(pow(stack->pop(), stack->pop())); }
+INSTRUCTION(Sin){ stack->push(sin(stack->pop())); }
+INSTRUCTION(Cos){ stack->push(cos(stack->pop())); }
+INSTRUCTION(Tan){ stack->push(tan(stack->pop())); }
 INSTRUCTION(Reg){ stack->push(reg->pop()); }
 INSTRUCTION(X)  { stack->push(x); }
 
@@ -254,6 +299,9 @@ tlmmInit()
     REGISTER_FUNCS();
     SYM("(");
     SYM(")");
+    FUNC(Sin, "sin");
+    FUNC(Cos, "cos");
+    FUNC(Tan, "tan");
     FUNC(Pow, "^");
     FUNC(Mul, "*");
     FUNC(Div, "/");
@@ -265,6 +313,7 @@ tlmmInit()
 };
 tlmmInit __init;
 
+#ifndef TLMM_LEAN
 namespace tlmm
 {
     Program::Program()
@@ -287,7 +336,7 @@ namespace tlmm
     void Program::Save(std::string filename)
     {
 #ifdef TLMM_HAS_IO
-	tlmmSaveProgramBinary(m_prog, filename.c_str());
+	tlmmSaveProgram(m_prog, filename.c_str());
 #endif/*TLMM_HAS_IO*/
     }
 
@@ -301,3 +350,4 @@ namespace tlmm
 	tlmmGetValue(m_prog, ref);
     }
 }
+#endif/*TLMM_LEAN*/
