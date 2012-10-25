@@ -41,6 +41,7 @@ files { "include/tlmm.h", "src/tlmm.cpp" }
 kind "StaticLib"
 defines
 {
+   "TLMM_LEAN",
    "TLMM_FAST_SQRT",
 }
 
@@ -53,4 +54,9 @@ project "tlmr"
 files { "include/tlmm.h", "src/tlmr.cpp" }
 kind "ConsoleApp"
 targetname "tlmm" -- may as well be called tlmm
+links { "tlmm" }
+
+project "tests"
+files { "include/tlmm.h", "tests/**.cpp" }
+kind "ConsoleApp"
 links { "tlmm" }

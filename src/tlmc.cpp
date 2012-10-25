@@ -42,6 +42,6 @@ int main(int argc, char** argv)
     tlmmParseProgram(prog, p.equation);
     tlmmSaveProgram(prog, p.objname);
     
-    tlmmTerminateProgram(prog);
+    tlmmTerminateProgram(&prog);
     return 0;
 }

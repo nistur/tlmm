@@ -3,21 +3,23 @@
 #include <map>
 #include <string.h>
 #include <stdlib.h>
-#include <stack>
+//#include <stack>
+
+#ifndef TLMM_STACK_MAX
+#define TLMM_STACK_MAX 256
+#endif/*TLMM_STACK_MAX*/
 
 struct _stack
 {
-public:
-    void push(float val) { m_Stack.push(val); }
-    float pop()
-    {
-	float rtn = m_Stack.top();
-	m_Stack.pop();
-	return rtn;
-    }
-private:
-    std::stack<float> m_Stack;
+    float _stack[TLMM_STACK_MAX];
+    int   _top;
 };
+void  _stackPush(_stack* stack, float val) { stack->_stack[stack->_top++] = val; }
+float _stackPop (_stack* stack) { return stack->_stack[--stack->_top]; }
+
+#define PUSH(x) _stackPush(stack, x)
+#define POP()   _stackPop(stack)
+#define REG()   _stackPop(reg)
 
 struct tlmmHeader
 {
@@ -55,9 +57,12 @@ tlmmProgram* tlmmInitProgram()
     return prog;
 }
 
-void tlmmTerminateProgram(tlmmProgram* prog)
+tlmmReturn tlmmTerminateProgram(tlmmProgram** prog)
 {
-    delete prog;
+    if(*prog)
+	delete *prog;
+    *prog = 0;
+    return TLMM_SUCCESS;
 }
 
 #ifdef TLMM_HAS_IO
@@ -184,7 +189,7 @@ void tlmmConvertRPN(std::vector<code>* symbols)
 	symbols->push_back(*iSym);
 }
 
-void tlmmParseProgram(tlmmProgram* prog, const char* program)
+tlmmReturn tlmmParseProgram(tlmmProgram* prog, const char* program)
 {
     const char* p = program;
     std::vector<code> syms;
@@ -218,7 +223,7 @@ void tlmmParseProgram(tlmmProgram* prog, const char* program)
 	else
 	{
 	    // error and return
-	    return;
+	    return TLMM_PARSE_ERROR;
 	}
     }
 
@@ -240,6 +245,8 @@ void tlmmParseProgram(tlmmProgram* prog, const char* program)
 	iReg != regs.end();
 	iReg++)
 	prog->dataSeg[i++] = *iReg;
+
+    return TLMM_SUCCESS;
     
 }
 #endif/*TLMM_COMPILE*/
@@ -249,12 +256,14 @@ float tlmmGetValue(tlmmProgram* prog, float ref)
     if(prog == 0)
 	return 0.0f;
     _stack stack;
+    stack._top = 0;
     _stack regs;
+    regs._top = 0;
     for(int i = prog->dataSize - 1; i >= 0; --i)
-	regs.push(prog->dataSeg[i]);
+	_stackPush(&regs, prog->dataSeg[i]);
     for(int i = 0; i < prog->codeSize; ++i)
 	g_Instructions[prog->codeSeg[i]](&stack, ref, &regs);
-    return stack.pop();
+    return _stackPop(&stack);
 }
 
 #define INSTRUCTION(fn)						\
@@ -280,16 +289,17 @@ float tlmmGetValue(tlmmProgram* prog, float ref)
     g_Instructions[255] = tlmmFunc##fn;
 
 #include <math.h>
-INSTRUCTION(Add){ stack->push(stack->pop() + stack->pop()); }
-INSTRUCTION(Del){ stack->push(stack->pop() - stack->pop()); }
-INSTRUCTION(Mul){ stack->push(stack->pop() * stack->pop()); }
-INSTRUCTION(Div){ stack->push(stack->pop() / stack->pop()); }
-INSTRUCTION(Pow){ stack->push(pow(stack->pop(), stack->pop())); }
-INSTRUCTION(Sin){ stack->push(sin(stack->pop())); }
-INSTRUCTION(Cos){ stack->push(cos(stack->pop())); }
-INSTRUCTION(Tan){ stack->push(tan(stack->pop())); }
-INSTRUCTION(Reg){ stack->push(reg->pop()); }
-INSTRUCTION(X)  { stack->push(x); }
+INSTRUCTION(Add){ PUSH(POP() + POP()); }
+INSTRUCTION(Del){ PUSH(POP() - POP()); }
+INSTRUCTION(Mul){ PUSH(POP() * POP()); }
+INSTRUCTION(Div){ PUSH(POP() / POP()); }
+INSTRUCTION(Pow){ PUSH(pow(POP(), POP())); }
+INSTRUCTION(Sqrt) { PUSH(sqrt(POP())); }
+INSTRUCTION(Sin){ PUSH(sin(POP())); }
+INSTRUCTION(Cos){ PUSH(cos(POP())); }
+INSTRUCTION(Tan){ PUSH(tan(POP())); }
+INSTRUCTION(Reg){ PUSH(REG()); }
+INSTRUCTION(X)  { _stackPush(stack, x); }
 
 class tlmmInit
 {
@@ -302,6 +312,7 @@ tlmmInit()
     FUNC(Sin, "sin");
     FUNC(Cos, "cos");
     FUNC(Tan, "tan");
+    FUNC(Sqrt, "sqrt");
     FUNC(Pow, "^");
     FUNC(Mul, "*");
     FUNC(Div, "/");
@@ -323,7 +334,7 @@ namespace tlmm
 
     Program::~Program()
     {
-	tlmmTerminateProgram(m_prog);
+	tlmmTerminateProgram(&m_prog);
     }
 
     void Program::Load(std::string filename)

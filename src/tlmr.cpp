@@ -23,6 +23,6 @@ int main(int argc, char** argv)
 	std::cout << "y=" << val << std::endl;
     }
 
-    tlmmTerminateProgram(prog);
+    tlmmTerminateProgram(&prog);
     return 0;
 }
