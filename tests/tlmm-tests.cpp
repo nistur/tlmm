@@ -94,8 +94,10 @@ void _Test::RunTest(_test* test, _result* res, int runs)
 	    Response r = test->test->Test(time);
 	    resp = r == SUCCESS && resp == SUCCESS ? SUCCESS : r;
 	    acc += time;
-	}
+	}	
 	time = acc / (float)runs;
+	if(target != 0.0f && time > target)
+	    resp = resp == SUCCESS ? TIMEOUT : resp;
     }
     printf("%fs", time);
     switch(resp)

@@ -35,6 +35,7 @@ tlmmReturn   tlmmParseProgram      (tlmmProgram* prog, const char* program);
 bool         tlmmLoadProgramBinary (tlmmProgram* prog, void* data, int size);
 
 float        tlmmGetValue          (tlmmProgram* prog, float ref);
+const char*  tlmmGetEquation       (tlmmProgram* prog);
 
 #ifdef __cplusplus
 }

@@ -37,6 +37,7 @@ defines
 }
 
 project "tlmm-lite"
+language "C"
 files { "include/tlmm.h", "src/tlmm.cpp" }
 kind "StaticLib"
 defines

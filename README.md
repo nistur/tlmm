@@ -68,6 +68,20 @@ There are 4 components of the tlmm system that are built.
 * tlmm-lite.a - Lightweight tlmm library. Doesn't support raw equations or file I/O. Lean and mean. Also C only
 * tlmm.h - The C/C++ interface to tlmm. Everything you need is here.
 
+Testing
+-------
+
+I've added a test suite (built, unsurprisingly as 'tests') This will run through a series of tests to check that tlmm is functioning properly. The tests are grouped by area. They are as follows:
+
+* Basic - basic tlmm functionality, initialisation, parsing, numerical ranges etc
+* Arithmetic - simple arithmetic operators, +-*/^() and checking that the precedence is respected
+* Trigonometry - trigonometric functions such as sin() cos() tan()
+* Equations - tests that sample equations will give back correct values. Stress tests
+
+As well as the simple pass/fail the test suite is set up to profile each test, with an optional timeout for each function. It is worth noting that certain standard functions will do some internal initialisation during the first time they are called (eg pow()) so the first test might spike unnaturally. For this reason, the tests are set to take an average of 100 tests. To change this value, pass -n {num} to tests when running it. 
+
+Also, for some reason, cos and tan fail on release. No idea why yet. Will look into it.
+
 Why do I actually need this?
 ----------------------------
 

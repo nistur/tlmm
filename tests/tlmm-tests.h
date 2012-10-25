@@ -93,6 +93,7 @@ inline float _time()
 #define ASSERT(x)				\
     if(!(x))					\
     {						\
+	t = _time() - start;			\
 	return FAILURE;				\
     }
 
