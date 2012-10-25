@@ -40,6 +40,26 @@ TEST(Parse, Basic, 0.0f,
      }
     );
 
+
+TEST(ParseComplex, Basic, 0.0f,
+     // initialisation
+     {
+	 m_data.program = tlmmInitProgram();
+     },
+     // cleanup
+     {
+	 tlmmTerminateProgram(&m_data.program);
+     },
+     // test
+     {
+	 ASSERT(tlmmParseProgram(m_data.program, "(x*2)+12^x") == TLMM_SUCCESS);
+     },
+     // data
+     {
+	 tlmmProgram* program;
+     }
+    );
+
 TEST_TLMM(Evaluate, Basic, 0.0f, "x",
 	  {
 	      ASSERT(tlmmGetValue(m_data.program, 2) == 2);

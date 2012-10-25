@@ -150,24 +150,45 @@ void _Test::RunTests(const char* group, int runs)
 
     if(group)
     {
+	for(int i = 0; i < TEST_MAX_GROUP; ++i)
+	    if(s_Tests[i].name && 
+	       strcmp(s_Tests[i].name, group) == 0)
+		RunGroup(&s_Tests[i], &res, runs);
     }
     else
+    {
 	for(int i = 0; i < TEST_MAX_GROUP; ++i)
 	    RunGroup(&s_Tests[i], &res, runs);
 
-
-    printf("\n-------------------------\n");
-    printf(" Results\n");
-    printf("-------------------------\n");
-    printf("time: %fs\n", res.time);
-    printf("passed: %d\t", res.success);
-    printf("failed: %d\n", res.fail);
-    printf("=========================\n");
+	printf("\n-------------------------\n");
+	printf(" Results\n");
+	printf("-------------------------\n");
+	printf("time: %fs\n", res.time);
+	printf("passed: %d\t", res.success);
+	printf("failed: %d\n", res.fail);
+	printf("=========================\n");
+    }
 }
+
+#include <stdlib.h>
 
 int main(int argc, char** argv)
 {
     gettimeofday(&tv_start, 0);
     
-    _Test::RunTests(0, 500);
+    int num = 10;
+    bool runAll = true;
+    for(int i = 1; i < argc; ++i)
+    {
+	if(strcmp(argv[i], "-n") == 0)
+	    num = atoi(argv[++i]);
+	else
+	{
+	    _Test::RunTests(argv[i], num);
+	    runAll = false;
+	}
+    }
+    
+    if(runAll)
+	_Test::RunTests(0, num);
 }
