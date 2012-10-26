@@ -78,7 +78,7 @@ void _Test::RunTest(_test* test, _result* res, int runs)
     if(!test || !test->name)
 	return;
     printf("    %s", test->name);
-    for(int i = 0; i < 20 - strlen(test->name); ++i) printf(" ");
+    for(unsigned int i = 0; i < 20 - strlen(test->name); ++i) printf(" ");
     test->test->Init();
     float time = test->time;
     Response resp = SUCCESS;

@@ -23,7 +23,13 @@ targetdir "build/debug"
 
 configuration "Release"
 defines { "NDEBUG" }
-flags { "Optimize" }
+flags { "OptimizeSpeed",
+	"EnableSSE", 
+	"EnableSSE2",
+	"FloatFast",
+	"ExtraWarnings",
+	"FatalWarnings",
+	"NoFramePointer"}
 targetdir "build/release"
 
 project "tlmm"

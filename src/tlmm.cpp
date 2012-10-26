@@ -183,6 +183,7 @@ _code tlmmLookupCode(_instruction instruction)
     for(int i=0; i < 256; ++i)
 	if(g_Instructions[i] == instruction)
 	    return (_code)i;
+    return 0;
 }
 #endif/*DEBUG*/
 
@@ -310,7 +311,6 @@ tlmmReturn tlmmParseProgram(tlmmProgram* prog, const char* program)
     std::vector<_code> syms;
     std::vector<float> regs;
     bool found;
-    int len = strlen(program);
     while(*p)
     {
 	found = false;
@@ -417,7 +417,6 @@ float tlmmGetValue(tlmmProgram* prog, float ref)
 #else
 # define REGISTER_FUNCS()			\
     int cnt = 1;				\
-    int scnt = 0;				\
     g_Instructions = new _instruction[256];
 # define FUNC(fn, sym)				\
     g_Instructions[cnt] = tlmmFunc##fn;		\
@@ -497,7 +496,7 @@ namespace tlmm
 
     float Program::GetValue(float ref)
     {
-	tlmmGetValue(m_prog, ref);
+	return tlmmGetValue(m_prog, ref);
     }
 }
 #endif/*TLMM_LEAN*/
