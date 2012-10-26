@@ -16,7 +16,6 @@
 #define XX_PRIME4 668265263U
 #define XX_PRIME5 0x165667b1
 
-#define _rotl(x,r) ((x<<r) | (x >>(32-r)))
 typedef unsigned int _hash;
 
 inline _hash XXH_small(const void* key, int len, _hash seed = 0)
@@ -55,11 +54,11 @@ inline _hash XXH_small(const void* key, int len, _hash seed = 0)
  */
 struct _stack
 {
-    float _stack[TLMM_STACK_MAX];
-    int   _top;
+    float stack[TLMM_STACK_MAX];
+    int   top;
 };
-inline void  _stackPush(_stack* stack, float val) { stack->_stack[stack->_top++] = val; }
-inline float _stackPop (_stack* stack) { return stack->_stack[--stack->_top]; }
+inline void  _stackPush(_stack* stack, float val) { stack->stack[stack->top++] = val; }
+inline float _stackPop (_stack* stack) { return stack->stack[--stack->top]; }
 
 #define PUSH(x) _stackPush(stack, x)
 #define POP()   _stackPop(stack)
@@ -328,7 +327,7 @@ tlmmReturn tlmmParseProgram(tlmmProgram* prog, const char* program)
 	if(*p >= '0' && *p <= '9')
 	{
 	    syms.push_back(255);
-	    regs.push_back(atof(p));
+	    regs.push_back((float)atof(p));
 	    while( (*p >= '0' && *p <= '9') ||
 		   *p == '.') ++p;
 	}
@@ -382,8 +381,8 @@ float tlmmGetValue(tlmmProgram* prog, float ref)
 	return 0.0f;
     _stack stack;
     _stack regs;
-    stack._top = 0;
-    regs._top = 0;
+    stack.top = 0;
+    regs.top = 0;
     for(int i = prog->dataSize - 1; i >= 0; --i)
 	_stackPush(&regs, prog->dataSeg[i]);
     for(int i = 0; i < prog->codeSize; ++i)
