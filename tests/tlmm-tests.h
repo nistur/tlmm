@@ -45,16 +45,30 @@ private:
     static _group* s_Tests;
 };
 
+#ifdef WIN32
+#include <Windows.h>
+extern SYSTEMTIME tv_start;
+inline float _time()
+{
+	SYSTEMTIME time;
+	GetSystemTime(&time);
+	float t = (float)(time.wSecond - tv_start.wSecond);
+	t += (float)time.wMilliseconds;// / 1000.f;
+	return t;
+}
+
+#else
 #include <sys/time.h>
 extern struct timeval tv_start;
 inline float _time()
 {
     struct timeval time;
     gettimeofday(&time, 0);
-    float t = (float)(time.tv_sec - tv_start.tv_sec) * 1000.f;
+    float t = (float)(time.tv_sec - tv_start.tv_sec);// * 1000.f;
     t += (float)time.tv_usec / 1000.f;
     return t;
 }
+#endif
 
 #define TEST(x, grp, time, init, cleanup, test, data)	\
     class x : public _Test				\
@@ -77,7 +91,7 @@ inline float _time()
 		t = dt;					\
 		return TIMEOUT;				\
 	    }						\
-	    t = end - start;				\
+	    t = dt	;				\
 	    return SUCCESS;				\
 	}						\
     };          					\

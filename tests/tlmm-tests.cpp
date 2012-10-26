@@ -11,7 +11,11 @@
 #endif/*TEST_MAX_TEST*/
 
 _Test::_group* _Test::s_Tests = 0;
+#ifdef WIN32
+SYSTEMTIME tv_start;
+#else
 struct timeval tv_start;
+#endif
 
 void _Test::Add(const char* name, const char* group, float time)
 {
@@ -176,8 +180,12 @@ void _Test::RunTests(const char* group, int runs)
 
 int main(int argc, char** argv)
 {
+#ifdef WIN32
+	GetSystemTime(&tv_start);
+#else
     gettimeofday(&tv_start, 0);
-    
+#endif
+
     int num = 10;
     bool runAll = true;
     for(int i = 1; i < argc; ++i)
