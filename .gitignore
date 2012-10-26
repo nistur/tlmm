@@ -1,0 +1,9 @@
+build/*
+obj/*
+*.sln
+*.suo
+*.sdf
+*.vcxproj*
+*.vcproj*
+*.make
+Makefile
