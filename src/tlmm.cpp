@@ -15,6 +15,7 @@
 #define XX_PRIME3 3266489917U
 #define XX_PRIME4 668265263U
 #define XX_PRIME5 0x165667b1
+#define _rotl(x,r) ((x<<r) | (x>>(32-r)))
 
 typedef unsigned int _hash;
 
@@ -430,7 +431,12 @@ INSTRUCTION(Add){ PUSH(POP() + POP()); }
 INSTRUCTION(Del){ PUSH(POP() - POP()); }
 INSTRUCTION(Mul){ PUSH(POP() * POP()); }
 INSTRUCTION(Div){ PUSH(POP() / POP()); }
-INSTRUCTION(Pow){ PUSH(pow(POP(), POP())); }
+INSTRUCTION(Pow)
+{
+    float op2 = POP();
+    float op1 = POP();
+    PUSH(pow(op1, op2)); 
+}
 INSTRUCTION(Sqrt) { PUSH(sqrt(POP())); }
 INSTRUCTION(Sin){ PUSH(sin(POP())); }
 INSTRUCTION(Cos){ PUSH(cos(POP())); }

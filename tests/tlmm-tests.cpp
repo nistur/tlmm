@@ -1,6 +1,22 @@
 #include "tlmm-tests.h"
+
+#include <pspkernel.h>
+#include <pspdebug.h>
+#include <pspctrl.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <stdio.h>
 #include <string.h>
+
+/* Define the module info section */
+PSP_MODULE_INFO("tlmm test suite", 0, 1, 1);
+
+/* Define the main thread's attribute value (optional) */
+PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
+
+/* Define printf, just to make typing easier */
+#define printf	pspDebugScreenPrintf
 
 #ifndef TEST_MAX_GROUP
 #define TEST_MAX_GROUP 10
@@ -9,6 +25,8 @@
 #ifndef TEST_MAX_TEST
 #define TEST_MAX_TEST 20
 #endif/*TEST_MAX_TEST*/
+
+
 
 _Test::_group* _Test::s_Tests = 0;
 #ifdef WIN32
@@ -176,29 +194,83 @@ void _Test::RunTests(const char* group, int runs)
     }
 }
 
-#include <stdlib.h>
 
-int main(int argc, char** argv)
+void dump_threadstatus(void);
+
+int done = 0;
+
+/* Exit callback */
+int exit_callback(int arg1, int arg2, void *common)
 {
-#ifdef WIN32
-	GetSystemTime(&tv_start);
-#else
-    gettimeofday(&tv_start, 0);
-#endif
+	done = 1;
+	return 0;
+}
 
-    int num = 10;
-    bool runAll = true;
-    for(int i = 1; i < argc; ++i)
+/* Callback thread */
+int CallbackThread(SceSize args, void *argp)
+{
+	int cbid;
+
+	cbid = sceKernelCreateCallback("Exit Callback", exit_callback, NULL);
+	sceKernelRegisterExitCallback(cbid);
+	sceKernelSleepThreadCB();
+
+	return 0;
+}
+
+/* Sets up the callback thread and returns its thread id */
+int SetupCallbacks(void)
+{
+    int thid = 0;
+    
+    thid = sceKernelCreateThread("update_thread", CallbackThread,
+				 0x11, 0xFA0, 0, 0);
+    if(thid >= 0)
     {
-	if(strcmp(argv[i], "-n") == 0)
-	    num = atoi(argv[++i]);
-	else
-	{
-	    _Test::RunTests(argv[i], num);
-	    runAll = false;
-	}
+	sceKernelStartThread(thid, 0, 0);
     }
     
-    if(runAll)
-	_Test::RunTests(0, num);
+    return thid;
+}
+
+const char* Tests[] =
+{
+    "Basic",
+    "Arithmetic",
+    "Trigonometry",
+    "Equations",
+    NULL,
+};
+
+int main(void)
+{
+    gettimeofday(&tv_start, 0);
+
+    SceCtrlData pad;
+    int curr = 0;
+    int cnt = 1000;
+    
+    pspDebugScreenInit();
+    SetupCallbacks();
+    
+    sceCtrlSetSamplingCycle(0);
+    sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
+    
+    while(!done)
+    {
+	pspDebugScreenSetXY(0, 2);
+	sceCtrlReadBufferPositive(&pad, 1);
+	printf("Number of tests to run:%d\n", cnt);
+
+	if(pad.Buttons & PSP_CTRL_CROSS)
+	    _Test::RunTests(Tests[curr++], cnt);
+	if(pad.Buttons & PSP_CTRL_LTRIGGER)
+	    cnt--;
+	if(pad.Buttons & PSP_CTRL_RTRIGGER)
+	    cnt++;
+	if(!Tests[curr]) curr = 0;
+    }
+    
+    sceKernelExitGame();
+    return 0;
 }
