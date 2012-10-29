@@ -16,6 +16,8 @@
 #define XX_PRIME4 668265263U
 #define XX_PRIME5 0x165667b1
 
+#define _rotl(x,r) ((x<<r)|(x>(32-r)))
+
 typedef unsigned int _hash;
 
 inline _hash XXH_small(const void* key, int len, _hash seed = 0)

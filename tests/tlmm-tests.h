@@ -65,7 +65,7 @@ inline float _time()
     struct timeval time;
     gettimeofday(&time, 0);
     float t = (float)(time.tv_sec - tv_start.tv_sec);// * 1000.f;
-    t += (float)time.tv_usec / 1000.f;
+    t += (float)time.tv_usec / 1000000.f;
     return t;
 }
 #endif
