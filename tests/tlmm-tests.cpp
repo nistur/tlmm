@@ -84,6 +84,15 @@ void _Test::RunTest(_test* test, _result* res, int runs)
     printf("    %s", test->name);
     for(unsigned int i = 0; i < 20 - strlen(test->name); ++i) printf(" ");
     test->test->Init();
+
+    // run one dummy test
+    // this ensures that any internal initialisation done by
+    // things such as the standard maths library, don't get taken
+    // into account when performing the tests
+    {
+	float dummy = 0;
+	test->test->Test(dummy);
+    }
     float time = test->time;
     Response resp = SUCCESS;
     if(runs == 0)
