@@ -78,9 +78,20 @@ I've added a test suite (built, unsurprisingly as 'tests') This will run through
 * Trigonometry - trigonometric functions such as sin() cos() tan()
 * Equations - tests that sample equations will give back correct values. Stress tests
 
-As well as the simple pass/fail the test suite is set up to profile each test, with an optional timeout for each function. It is worth noting that certain standard functions will do some internal initialisation during the first time they are called (eg pow()) so the first test might spike unnaturally. For this reason, the tests are set to take an average of 100 tests. To change this value, pass -n {num} to tests when running it. 
+As well as the simple pass/fail the test suite is set up to profile each test, with an optional timeout for each function. It is worth noting that certain standard functions will do some internal initialisation during the first time they are called (eg pow()) so the first test might spike unnaturally. For this reason, a dummy test is carried out first before beginning any timed tests.
 
-Also, for some reason, cos and tan fail on release. No idea why yet. Will look into it.
+Porting
+-------
+
+Something I've become interested in with this project, with regards to it's size and it's reasonable performance, is porting it to other platforms. I have therefore begun experimenting with getting this working on anything possible. So far, this branch supports compilation on Windows, Linux and Mac OS X.
+
+On top of this, and as a result of, among other things, premake4 not supporting changing compilers properly, I have created the branch `psp` which builds with the homebrew pspsdk, which can be installed part of devkitPro. I have tested it on a PSP-2000 and found the performance to be acceptable (40-60us for most tests)
+
+`mtheall` also forked tlmm and created a Nintendo DS application using devkitARM. I will also add a DS branch to this repository once I can get devkitARM to work properly. I will also look into integrating mtheall's changes.
+
+Any other platforms will be supported on a whim basis...
+
+Oh, and the library code shouldn't change at all between the branches, just the build scripts (most consoles won't use premake4) and test suite.
 
 Why do I actually need this?
 ----------------------------

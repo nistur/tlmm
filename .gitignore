@@ -7,3 +7,7 @@ obj/*
 *.vcproj*
 *.make
 Makefile
+*.o
+*.elf
+*.PBP
+*.SFO
