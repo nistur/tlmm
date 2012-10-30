@@ -1,22 +1,9 @@
 #include "tlmm-tests.h"
 
-#include <pspkernel.h>
-#include <pspdebug.h>
-#include <pspctrl.h>
-#include <stdlib.h>
-#include <string.h>
+#include <nds.h>
 
 #include <stdio.h>
 #include <string.h>
-
-/* Define the module info section */
-PSP_MODULE_INFO("tlmm test suite", 0, 1, 1);
-
-/* Define the main thread's attribute value (optional) */
-PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
-
-/* Define printf, just to make typing easier */
-#define printf	pspDebugScreenPrintf
 
 #ifndef TEST_MAX_GROUP
 #define TEST_MAX_GROUP 10
@@ -99,8 +86,8 @@ void _Test::RunTest(_test* test, _result* res, int runs)
 {
     if(!test || !test->name)
 	return;
-    printf("    %s", test->name);
-    for(unsigned int i = 0; i < 20 - strlen(test->name); ++i) printf(" ");
+    printf(" %s", test->name);
+    for(unsigned int i = 0; i < 14 - strlen(test->name); ++i) printf(" ");
     test->test->Init();
     float time = test->time;
     Response resp = SUCCESS;
@@ -126,15 +113,15 @@ void _Test::RunTest(_test* test, _result* res, int runs)
     {
     case SUCCESS:
 	res->success++;
-	printf("\tSUCCESS\n");
+	printf(" SUCCESS\n");
 	break;
     case TIMEOUT:
 	res->fail++;
-	printf("\tTIMEOUT\n");
+	printf(" TIMEOUT\n");
 	break;
     case FAILURE:
 	res->fail++;
-	printf("\tFAILURE\n");
+	printf(" FAILURE\n");
 	break;
     }
     test->test->Cleanup();
@@ -194,45 +181,6 @@ void _Test::RunTests(const char* group, int runs)
     }
 }
 
-
-void dump_threadstatus(void);
-
-int done = 0;
-
-/* Exit callback */
-int exit_callback(int arg1, int arg2, void *common)
-{
-	done = 1;
-	return 0;
-}
-
-/* Callback thread */
-int CallbackThread(SceSize args, void *argp)
-{
-	int cbid;
-
-	cbid = sceKernelCreateCallback("Exit Callback", exit_callback, NULL);
-	sceKernelRegisterExitCallback(cbid);
-	sceKernelSleepThreadCB();
-
-	return 0;
-}
-
-/* Sets up the callback thread and returns its thread id */
-int SetupCallbacks(void)
-{
-    int thid = 0;
-    
-    thid = sceKernelCreateThread("update_thread", CallbackThread,
-				 0x11, 0xFA0, 0, 0);
-    if(thid >= 0)
-    {
-	sceKernelStartThread(thid, 0, 0);
-    }
-    
-    return thid;
-}
-
 const char* Tests[] =
 {
     "Basic",
@@ -246,31 +194,28 @@ int main(void)
 {
     gettimeofday(&tv_start, 0);
 
-    SceCtrlData pad;
     int curr = 0;
-    int cnt = 1000;
+    int cnt = 100;
+	
+    consoleDemoInit();
     
-    pspDebugScreenInit();
-    SetupCallbacks();
-    
-    sceCtrlSetSamplingCycle(0);
-    sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
-    
-    while(!done)
+    while(1)
     {
-	pspDebugScreenSetXY(0, 2);
-	sceCtrlReadBufferPositive(&pad, 1);
-	printf("Number of tests to run:%d\n", cnt);
+        swiWaitForVBlank();
+	printf("\x1b[1;0HNumber of tests to run:%d\n", cnt);
+	scanKeys();
 
-	if(pad.Buttons & PSP_CTRL_CROSS)
+	if(keysHeld() & KEY_A)
+	{
+            consoleClear();
 	    _Test::RunTests(Tests[curr++], cnt);
-	if(pad.Buttons & PSP_CTRL_LTRIGGER)
+	}
+	if(keysHeld() & KEY_DOWN)
 	    cnt--;
-	if(pad.Buttons & PSP_CTRL_RTRIGGER)
+	if(keysHeld() & KEY_UP)
 	    cnt++;
 	if(!Tests[curr]) curr = 0;
     }
-    
-    sceKernelExitGame();
+
     return 0;
 }

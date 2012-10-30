@@ -8,15 +8,15 @@ ifndef verbose
 endif
 
 #ifndef CC
-  CC = psp-gcc
+  CC = arm-none-eabi-gcc
 #endif
 
 #ifndef CXX
-  CXX = psp-g++
+  CXX = arm-none-eabi-g++
 #endif
 
 #ifndef AR
-  AR = psp-ar
+  AR = arm-none-eabi-ar
 #endif
 
 ifndef RESCOMP
