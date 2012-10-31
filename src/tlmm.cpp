@@ -64,7 +64,7 @@ inline float _stackPop (_stack* stack) { return stack->stack[--stack->top]; }
 
 #define PUSH(x) _stackPush(stack, x)
 #define POP()   _stackPop(stack)
-#define REG()   _stackPop(reg)
+#define CONST()   _stackPop(consts)
 
 struct tlmmHeader
 {
@@ -75,7 +75,7 @@ struct tlmmHeader
 
 const char* ID = "TLMM";
 
-typedef void(*_instruction)(_stack*, float, _stack*);
+typedef void(*_instruction)(_stack*, _stack*, float*);
 typedef unsigned char _code;
 _instruction* g_Instructions;
 
@@ -121,7 +121,8 @@ struct tlmmProgram
     _instruction* codeSeg;
 #endif/*DEBUG*/
     float* dataSeg;
-    char* eqn;
+    char*  eqn;
+    float  registers[26];
 };
 
 inline void tlmmClearProgram(tlmmProgram* prog)
@@ -131,6 +132,7 @@ inline void tlmmClearProgram(tlmmProgram* prog)
     SAFE_DELETE_ARRAY(prog->codeSeg);
     SAFE_DELETE_ARRAY(prog->dataSeg);
     SAFE_DELETE_ARRAY(prog->eqn);
+    memset(prog->registers, 0, sizeof(float) * 26);
 }
 
 tlmmProgram* tlmmInitProgram()
@@ -260,7 +262,7 @@ void tlmmConvertRPN(std::vector<_code>* symbols)
     {
 	if(*iSym == _symbolCode("("))
 	    stack.push_back(*iSym);
-	else if(*iSym == _symbolCode("x") || 
+	else if( (*iSym >= _symbolCode("a") && *iSym <= _symbolCode("z")) ||
 		*iSym == 255)
 	    out.push_back(*iSym);
 	else if(*iSym != _symbolCode(")")) // any symbol other than (, ), x or values
@@ -310,7 +312,7 @@ tlmmReturn tlmmParseProgram(tlmmProgram* prog, const char* program)
 {
     const char* p = program;
     std::vector<_code> syms;
-    std::vector<float> regs;
+    std::vector<float> consts;
     bool found;
     while(*p)
     {
@@ -329,7 +331,7 @@ tlmmReturn tlmmParseProgram(tlmmProgram* prog, const char* program)
 	if(*p >= '0' && *p <= '9')
 	{
 	    syms.push_back(255);
-	    regs.push_back((float)atof(p));
+	    consts.push_back((float)atof(p));
 	    while( (*p >= '0' && *p <= '9') ||
 		   *p == '.') ++p;
 	}
@@ -364,11 +366,11 @@ tlmmReturn tlmmParseProgram(tlmmProgram* prog, const char* program)
 	prog->codeSeg[i++] = g_Instructions[*iSym];
 #endif/*DEBUG*/
     
-    prog->dataSize = regs.size();
-    prog->dataSeg = new float[regs.size()];
+    prog->dataSize = consts.size();
+    prog->dataSeg = new float[consts.size()];
     i = 0;
-    for(std::vector<float>::iterator iReg = regs.begin();
-	iReg != regs.end();
+    for(std::vector<float>::iterator iReg = consts.begin();
+	iReg != consts.end();
 	iReg++)
 	prog->dataSeg[i++] = *iReg;
 
@@ -377,29 +379,45 @@ tlmmReturn tlmmParseProgram(tlmmProgram* prog, const char* program)
 }
 #endif/*TLMM_COMPILE*/
 
-float tlmmGetValue(tlmmProgram* prog, float ref)
+tlmmReturn tlmmSetValue(tlmmProgram* prog, unsigned char variable, float value)
+{
+    if(variable < 'a' || variable > 'z')
+	return TLMM_OUT_OF_RANGE;
+    prog->registers[variable - 'a'] = value;
+    return TLMM_SUCCESS;
+}
+
+float tlmmGet(tlmmProgram* prog)
 {
     if(prog == 0)
 	return 0.0f;
     _stack stack;
-    _stack regs;
+    _stack consts;
     stack.top = 0;
-    regs.top = 0;
+    consts.top = 0;
     for(int i = prog->dataSize - 1; i >= 0; --i)
-	_stackPush(&regs, prog->dataSeg[i]);
+	_stackPush(&consts, prog->dataSeg[i]);
     for(int i = 0; i < prog->codeSize; ++i)
     {
 #ifdef DEBUG
-	g_Instructions[prog->codeSeg[i]](&stack, ref, &regs);
+	g_Instructions[prog->codeSeg[i]](&stack, &consts, prog->registers);
 #else
-	prog->codeSeg[i](&stack, ref, &regs);
+	prog->codeSeg[i](&stack, &consts, prog->registers);
 #endif/*DEBUG*/
     }
     return _stackPop(&stack);
 }
 
+float tlmmGetValue(tlmmProgram* prog, float ref)
+{
+    if(prog == 0)
+	return 0.0f;
+    prog->registers['x' - 'a'] = ref;
+    return tlmmGet(prog);
+}
+
 #define INSTRUCTION(fn)						\
-    void tlmmFunc##fn(_stack* stack, float x, _stack* reg)
+    void tlmmFunc##fn(_stack* stack, _stack* consts, float* regs)
 #ifdef TLMM_COMPILE
 # define REGISTER_FUNCS()			\
     int cnt = 1;				\
@@ -429,16 +447,56 @@ float tlmmGetValue(tlmmProgram* prog, float ref)
 
 #include <math.h>
 INSTRUCTION(Add){ PUSH(POP() + POP()); }
-INSTRUCTION(Del){ PUSH(POP() - POP()); }
+INSTRUCTION(Del)
+{
+    float op2 = POP();
+    float op1 = POP();
+    PUSH(op1 - op2); 
+}
 INSTRUCTION(Mul){ PUSH(POP() * POP()); }
-INSTRUCTION(Div){ PUSH(POP() / POP()); }
-INSTRUCTION(Pow){ PUSH(pow(POP(), POP())); }
+INSTRUCTION(Div)
+{
+    float op2 = POP();
+    float op1 = POP();
+    PUSH(op1 / op2); 
+}
+INSTRUCTION(Pow)
+{
+    float op2 = POP();
+    float op1 = POP();
+    PUSH(pow(op1, op2)); 
+}
 INSTRUCTION(Sqrt) { PUSH(sqrt(POP())); }
 INSTRUCTION(Sin){ PUSH(sin(POP())); }
 INSTRUCTION(Cos){ PUSH(cos(POP())); }
 INSTRUCTION(Tan){ PUSH(tan(POP())); }
-INSTRUCTION(Reg){ PUSH(REG()); }
-INSTRUCTION(X)  { _stackPush(stack, x); }
+INSTRUCTION(Consts){ PUSH(CONST()); }
+INSTRUCTION(A)  { PUSH(regs[0]); }
+INSTRUCTION(B)  { PUSH(regs[1]); }
+INSTRUCTION(C)  { PUSH(regs[2]); }
+INSTRUCTION(D)  { PUSH(regs[3]); }
+INSTRUCTION(E)  { PUSH(regs[4]); }
+INSTRUCTION(F)  { PUSH(regs[5]); }
+INSTRUCTION(G)  { PUSH(regs[6]); }
+INSTRUCTION(H)  { PUSH(regs[7]); }
+INSTRUCTION(I)  { PUSH(regs[8]); }
+INSTRUCTION(J)  { PUSH(regs[9]); }
+INSTRUCTION(K)  { PUSH(regs[10]); }
+INSTRUCTION(L)  { PUSH(regs[11]); }
+INSTRUCTION(M)  { PUSH(regs[12]); }
+INSTRUCTION(N)  { PUSH(regs[13]); }
+INSTRUCTION(O)  { PUSH(regs[14]); }
+INSTRUCTION(P)  { PUSH(regs[15]); }
+INSTRUCTION(Q)  { PUSH(regs[16]); }
+INSTRUCTION(R)  { PUSH(regs[17]); }
+INSTRUCTION(S)  { PUSH(regs[18]); }
+INSTRUCTION(T)  { PUSH(regs[19]); }
+INSTRUCTION(U)  { PUSH(regs[20]); }
+INSTRUCTION(V)  { PUSH(regs[21]); }
+INSTRUCTION(W)  { PUSH(regs[22]); }
+INSTRUCTION(X)  { PUSH(regs[23]); }
+INSTRUCTION(Y)  { PUSH(regs[24]); }
+INSTRUCTION(Z)  { PUSH(regs[25]); }
 
 class tlmmInit
 {
@@ -457,8 +515,33 @@ tlmmInit()
     FUNC(Div, "/");
     FUNC(Add, "+");
     FUNC(Del, "-");
+    FUNC(A,   "a");
+    FUNC(B,   "b");
+    FUNC(C,   "c");
+    FUNC(D,   "d");
+    FUNC(E,   "e");
+    FUNC(F,   "f");
+    FUNC(G,   "g");
+    FUNC(H,   "h");
+    FUNC(I,   "i");
+    FUNC(J,   "j");
+    FUNC(K,   "k");
+    FUNC(L,   "l");
+    FUNC(M,   "m");
+    FUNC(N,   "n");
+    FUNC(O,   "o");
+    FUNC(P,   "p");
+    FUNC(Q,   "q");
+    FUNC(R,   "r");
+    FUNC(S,   "s");
+    FUNC(T,   "t");
+    FUNC(U,   "u");
+    FUNC(V,   "v");
+    FUNC(W,   "w");
     FUNC(X,   "x");
-    ACCESS(Reg);
+    FUNC(Y,   "y");
+    FUNC(Z,   "z");
+    ACCESS(Consts);
 }
 };
 tlmmInit __init;

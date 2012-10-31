@@ -18,8 +18,9 @@ struct tlmmProgram;
 
 // Return values
 typedef int tlmmReturn;
-#define TLMM_SUCCESS     0
-#define TLMM_PARSE_ERROR 1
+#define TLMM_SUCCESS      0
+#define TLMM_PARSE_ERROR  1
+#define TLMM_OUT_OF_RANGE 2
 
 
 tlmmProgram* tlmmInitProgram();
@@ -33,8 +34,10 @@ void         tlmmSaveProgram       (tlmmProgram* prog, const char* filename);
 #endif/*TLMM_HAS_IO*/
 tlmmReturn   tlmmParseProgram      (tlmmProgram* prog, const char* program);
 bool         tlmmLoadProgramBinary (tlmmProgram* prog, void* data, int size);
-
+    
+tlmmReturn   tlmmSetValue          (tlmmProgram* prog, unsigned char variable, float value);
 float        tlmmGetValue          (tlmmProgram* prog, float ref);
+float        tlmmGet               (tlmmProgram* prog);
 const char*  tlmmGetEquation       (tlmmProgram* prog);
 
 #ifdef __cplusplus

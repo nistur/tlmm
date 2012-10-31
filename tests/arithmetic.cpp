@@ -11,7 +11,7 @@ TEST_TLMM(Addition, Arithmetic, 0.0f, "x+2",
 
 TEST_TLMM(Subtraction, Arithmetic, 0.0f, "x-2",
 	  {
-	      ASSERT(tlmmGetValue(m_data.program, 2) == 0);
+	      ASSERT(tlmmGetValue(m_data.program, 3) == 1);
 	  }
     );
 
@@ -23,13 +23,13 @@ TEST_TLMM(Multiplication, Arithmetic, 0.0f, "x*2",
 
 TEST_TLMM(Division, Arithmetic, 0.0f, "x/2",
 	  {
-	      ASSERT(tlmmGetValue(m_data.program, 2) == 1);
+	      ASSERT(tlmmGetValue(m_data.program, 5) == 2.5);
 	  }
     );
 
 TEST_TLMM(Square, Arithmetic, 0.01f, "x^2",
 	  {
-	      ASSERT(tlmmGetValue(m_data.program, 2) == 4);
+	      ASSERT(tlmmGetValue(m_data.program, 5) == 25);
 	  }
     );
 

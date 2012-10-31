@@ -44,7 +44,6 @@ defines
 {
    "TLMM_HAS_IO",
    "TLMM_COMPILE",
-   "TLMM_FAST_SQRT",
 }
 
 project "tlmm-lite"
