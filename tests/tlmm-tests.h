@@ -59,6 +59,7 @@ inline float _time()
 
 #else
 #include <sys/time.h>
+// this is naaaaaasty. Need to fix.
 extern struct timeval tv_start;
 inline float _time()
 {
@@ -91,7 +92,7 @@ inline float _time()
 		t = dt;					\
 		return TIMEOUT;				\
 	    }						\
-	    t = dt	;				\
+	    t = dt;					\
 	    return SUCCESS;				\
 	}						\
     };          					\

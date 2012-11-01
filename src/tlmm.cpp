@@ -467,8 +467,11 @@ INSTRUCTION(Pow)
     PUSH(pow(op1, op2)); 
 }
 INSTRUCTION(Sqrt) { PUSH(sqrt(POP())); }
+INSTRUCTION(Asin){ PUSH(asin(POP())); }
 INSTRUCTION(Sin){ PUSH(sin(POP())); }
+INSTRUCTION(Acos){ PUSH(acos(POP())); }
 INSTRUCTION(Cos){ PUSH(cos(POP())); }
+INSTRUCTION(Atan){ PUSH(atan(POP())); }
 INSTRUCTION(Tan){ PUSH(tan(POP())); }
 INSTRUCTION(Consts){ PUSH(CONST()); }
 INSTRUCTION(A)  { PUSH(regs[0]); }
@@ -506,8 +509,11 @@ tlmmInit()
     REGISTER_FUNCS();
     SYM("(");
     SYM(")");
+    FUNC(Asin, "asin");
     FUNC(Sin, "sin");
+    FUNC(Acos, "acos");
     FUNC(Cos, "cos");
+    FUNC(Atan, "atan");
     FUNC(Tan, "tan");
     FUNC(Sqrt, "sqrt");
     FUNC(Pow, "^");
