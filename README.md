@@ -3,10 +3,10 @@ TINY LITTLE MATHS MACHINE
 
 ttml is a tiny little maths virtual machine written in C and C++. The reason behind this madness is that I wanted to be able to evaluate arbitrary expressions at run time, potentially graph them, and use them to tweak parameters in my projects.
 
-Principles of ttml
+Principles of tlmm
 ------------------
 
-There are a few principles behind the development of ttml:
+There are a few principles behind the development of tlmm:
 
 * The API should be simple, clean and easy to use (in both C and C++)
 * The library should be small
