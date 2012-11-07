@@ -71,3 +71,7 @@ project "tests"
 files { "include/tlmm.h", "tests/**.cpp" }
 kind "ConsoleApp"
 links { "tlmm" }
+configuration "Debug"
+postbuildcommands("build/debug/tests")
+configuration "Release"
+postbuildcommands("build/release/tests")
